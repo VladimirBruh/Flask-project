@@ -4,11 +4,6 @@ from flask import request, Response
 import json
 from http import HTTPStatus
 
-@app.route("/")
-def index():
-    return "<h1>Hello</h1>"
-
-
 @app.post("/user/create")
 def user_create():
     data = request.get_json()
@@ -45,6 +40,7 @@ def user_get(user_id):
     if isinstance(user_id, int) == False or user_id < 0 or user_id >= len(USERS):
         return Response(status=HTTPStatus.NO_CONTENT)
     user = USERS[user_id]
+
     response = Response(
         json.dumps(
             {
@@ -72,6 +68,10 @@ def create_post():
 
     post = models.Post(id,author_id,text,reactions)
     POSTS.append(post)
+
+    user = USERS[int(author_id)]
+    user.posts.append(id)
+
     response = Response(
         json.dumps(
             {
@@ -102,3 +102,43 @@ def get_post(post_id):
         mimetype="oplication/json",
     )
     return response
+
+@app.post("/posts/<int:post_id>/reaction")
+def post_reaction(post_id):
+        data = request.get_json()
+
+        post = POSTS[post_id]
+        post.reactions.append(data["reaction"])
+
+        user_id = int(data["user_id"])
+        user = USERS[user_id]
+        user.total_reactions+=1
+        return flask.jsonify({'status':'200'}), 200
+
+
+
+@app.get("/users/<int:user_id>/posts")
+def get_posts(user_id):
+    data = request.get_json()
+    user = USERS[user_id]
+    posts_id = user.posts # хуйня с числами, а нужно по этим числам найти посты
+    posts_class = []
+    posts = []
+    for i in posts_id:
+        posts_class.append(POSTS[i])
+    for i in posts_class:
+        posts.append(
+            {
+            "id": i.id,
+            "auhor_id": i.author_id,
+            "text": i.text,
+            "reactions": i.reactions
+            }
+        )
+    if data["sort"]=="asc":
+        posts.sort(key=lambda x:x["reactions"],reverse=False)
+    elif data["sort"]=="desc":
+        posts.sort(key=lambda x: x["reactions"], reverse=True)
+    else:
+        return flask.jsonify({'error':'not found'}), 404
+    return posts

@@ -1,6 +1,13 @@
 import re
 
-class User:
+
+class Post():
+    def __init__(self,id,author_id,text,reactions):
+        self.id=id
+        self.author_id = author_id
+        self.text = text
+        self.reactions = reactions
+class User():
     def __init__(self, id, first_name, last_name, email, posts, total_reactions=0):
         self.id = id
         self.first_name = first_name
@@ -13,9 +20,24 @@ class User:
         if re.match(r"[^@]+@[^@]+\.[^@]+", email):
             return True
         return False
-class Post:
-    def __init__(self,id,author_id,text,reactions):
-        self.id=id
-        self.author_id = author_id
-        self.text = text
-        self.reactions = reactions
+    def append_post(self,post):
+        ...
+
+
+posts = [
+    {
+        "id": "0",
+        "auhor_id": "1",
+        "text": "hello",
+        "reactions": ["hello","nice"]
+    },
+    {
+        "id": "1",
+        "auhor_id": "1",
+        "text": "hello",
+        "reactions": ["hello1","nice1","niiice"]
+    },
+]
+
+posts.sort(key=lambda x:x["reactions"],reverse=False)
+print(posts)
