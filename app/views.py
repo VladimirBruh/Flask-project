@@ -1,8 +1,10 @@
 import flask
+import matplotlib.pyplot as plt
 from app import app, USERS, POSTS, models
 from flask import request, Response
 import json
 from http import HTTPStatus
+
 
 @app.post("/user/create")
 def user_create():
@@ -12,7 +14,6 @@ def user_create():
     last_name = data["last_name"]
     email = data["email"]
     posts = []
-    # todo: check phone and email for validity
     if not models.User.is_valid_email(email):
         return Response(status=HTTPStatus.BAD_REQUEST)
     user = models.User(id, first_name, last_name, email, posts)
@@ -121,7 +122,7 @@ def post_reaction(post_id):
 def get_posts(user_id):
     data = request.get_json()
     user = USERS[user_id]
-    posts_id = user.posts # хуйня с числами, а нужно по этим числам найти посты
+    posts_id = user.posts
     posts_class = []
     posts = []
     for i in posts_id:
@@ -142,3 +143,43 @@ def get_posts(user_id):
     else:
         return flask.jsonify({'error':'not found'}), 404
     return posts
+
+@app.get("/users/leaderboard")
+def users2():
+    data = request.get_json()
+    if data["type"]=="list":
+        users = []
+        for i in USERS:
+            users.append(
+                {
+                    "id": i.id,
+                    "first_name": i.first_name,
+                    "last_name": i.last_name,
+                    "email": i.email,
+                    "posts": i.posts,
+                    "total_reactions": i.total_reactions
+                }
+            )
+        if data["sort"]=="asc":
+            users.sort(key=lambda x:x["total_reactions"],reverse=False)
+        elif data["sort"]=="desc":
+            users.sort(key=lambda x: x["total_reactions"], reverse=True)
+        else:
+            return flask.jsonify({'error':'not found'}), 404
+        return users
+    elif data["type"]=="graph":
+        ... # todo: matplotlib график
+        fig, ax = plt.subplots()
+        user_names = [user.first_name for user in USERS]
+        user_total_reaction = [user.total_reactions for user in USERS]
+        ax.bar(user_names,user_total_reaction)
+        ax.set_ylabel("User total reactions")
+        ax.set_title("Users leaderboard by reactions")
+        plt.savefig('app/static/users_leaderboard.png')
+        return Response(
+            f'<img src= "{flask.url_for("static",filename="users_leaderboard.png")}">',
+            status=HTTPStatus.OK,
+            mimetype='text/html',
+        )
+    else:
+        return Response(status=HTTPStatus.BAD_REQUEST)

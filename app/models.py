@@ -20,24 +20,6 @@ class User():
         if re.match(r"[^@]+@[^@]+\.[^@]+", email):
             return True
         return False
-    def append_post(self,post):
-        ...
 
-
-posts = [
-    {
-        "id": "0",
-        "auhor_id": "1",
-        "text": "hello",
-        "reactions": ["hello","nice"]
-    },
-    {
-        "id": "1",
-        "auhor_id": "1",
-        "text": "hello",
-        "reactions": ["hello1","nice1","niiice"]
-    },
-]
-
-posts.sort(key=lambda x:x["reactions"],reverse=False)
-print(posts)
+    def __lt__(self, other): # для функции sorted(USERS)
+        return self.total_reactions < other.total_reactions
