@@ -67,7 +67,7 @@ def create_post():
     text = data["text"]
     reactions = []
 
-    post = models.Post(id,author_id,text,reactions)
+    post = models.Post(id, author_id, text, reactions)
     POSTS.append(post)
 
     user = USERS[int(author_id)]
@@ -87,6 +87,7 @@ def create_post():
     )
     return response
 
+
 @app.get("/posts/<int:post_id>")
 def get_post(post_id):
     post = POSTS[post_id]
@@ -104,18 +105,18 @@ def get_post(post_id):
     )
     return response
 
+
 @app.post("/posts/<int:post_id>/reaction")
 def post_reaction(post_id):
-        data = request.get_json()
+    data = request.get_json()
 
-        post = POSTS[post_id]
-        post.reactions.append(data["reaction"])
+    post = POSTS[post_id]
+    post.reactions.append(data["reaction"])
 
-        user_id = int(data["user_id"])
-        user = USERS[user_id]
-        user.total_reactions+=1
-        return flask.jsonify({'status':'200'}), 200
-
+    user_id = int(data["user_id"])
+    user = USERS[user_id]
+    user.total_reactions += 1
+    return flask.jsonify({"status": "200"}), 200
 
 
 @app.get("/users/<int:user_id>/posts")
@@ -130,24 +131,25 @@ def get_posts(user_id):
     for i in posts_class:
         posts.append(
             {
-            "id": i.id,
-            "auhor_id": i.author_id,
-            "text": i.text,
-            "reactions": i.reactions
+                "id": i.id,
+                "auhor_id": i.author_id,
+                "text": i.text,
+                "reactions": i.reactions,
             }
         )
-    if data["sort"]=="asc":
-        posts.sort(key=lambda x:x["reactions"],reverse=False)
-    elif data["sort"]=="desc":
+    if data["sort"] == "asc":
+        posts.sort(key=lambda x: x["reactions"], reverse=False)
+    elif data["sort"] == "desc":
         posts.sort(key=lambda x: x["reactions"], reverse=True)
     else:
-        return flask.jsonify({'error':'not found'}), 404
+        return flask.jsonify({"error": "not found"}), 404
     return posts
+
 
 @app.get("/users/leaderboard")
 def users2():
     data = request.get_json()
-    if data["type"]=="list":
+    if data["type"] == "list":
         users = []
         for i in USERS:
             users.append(
@@ -157,29 +159,28 @@ def users2():
                     "last_name": i.last_name,
                     "email": i.email,
                     "posts": i.posts,
-                    "total_reactions": i.total_reactions
+                    "total_reactions": i.total_reactions,
                 }
             )
-        if data["sort"]=="asc":
-            users.sort(key=lambda x:x["total_reactions"],reverse=False)
-        elif data["sort"]=="desc":
+        if data["sort"] == "asc":
+            users.sort(key=lambda x: x["total_reactions"], reverse=False)
+        elif data["sort"] == "desc":
             users.sort(key=lambda x: x["total_reactions"], reverse=True)
         else:
-            return flask.jsonify({'error':'not found'}), 404
+            return flask.jsonify({"error": "not found"}), 404
         return users
-    elif data["type"]=="graph":
-        ... # todo: matplotlib график
+    elif data["type"] == "graph":
         fig, ax = plt.subplots()
         user_names = [user.first_name for user in USERS]
         user_total_reaction = [user.total_reactions for user in USERS]
-        ax.bar(user_names,user_total_reaction)
+        ax.bar(user_names, user_total_reaction)
         ax.set_ylabel("User total reactions")
         ax.set_title("Users leaderboard by reactions")
-        plt.savefig('app/static/users_leaderboard.png')
+        plt.savefig("app/static/users_leaderboard.png")
         return Response(
             f'<img src= "{flask.url_for("static",filename="users_leaderboard.png")}">',
             status=HTTPStatus.OK,
-            mimetype='text/html',
+            mimetype="text/html",
         )
     else:
         return Response(status=HTTPStatus.BAD_REQUEST)
